@@ -13,35 +13,7 @@
 #include <condition_variable>
 #include <thread>
 
-bool aLessB(const unsigned int& x, const unsigned int& y, unsigned int pow) {
-
-	if (x == y) return false; // if the two numbers are the same then one is not less than the other
-
-	unsigned int a = x;
-	unsigned int b = y;
-
-	// work out the digit we are currently comparing on. 
-	if (pow == 0) {
-		while (a / 10 > 0) {
-			a = a / 10; 
-		}   
-		while (b / 10 > 0) {
-			b = b / 10;
-		}
-	} else {
-		while (a / 10 >= (unsigned int) std::round(std::pow(10,pow))) {
-			a = a / 10;
-		}
-		while (b / 10 >= (unsigned int) std::round(std::pow(10,pow))) {
-			b = b / 10;
-		}
-	}
-
-	if (a == b)
-		return aLessB(x,y,pow + 1);  // recurse if this digit is the same 
-	else
-		return a < b;
-}
+static const int min_interval = 10000;
 
 struct job {
 	job () = default;
@@ -52,16 +24,53 @@ struct job {
 	size_t index;
 };
 
-void BucketSort::sort(unsigned int numCores) {
-	std::vector<std::string> strings;
-	strings.reserve(numbersToSort.size());
-	for(unsigned int num : numbersToSort) {
-		strings.push_back(std::to_string(num));
+std::vector<std::string> getstrings(std::vector<unsigned int> nums, unsigned int numCores){
+	std::vector<std::string> strings(nums.size());
+	std::vector<std::thread> threads;
+	std::mutex m;
+	auto it = nums.begin();
+
+	auto fill = [&](unsigned i){
+		while(true) {
+			std::vector<unsigned int>::iterator begin;
+			std::vector<unsigned int>::iterator end;
+			{
+				std::lock_guard<std::mutex> lock(m);	
+				begin = it;
+				if(it == nums.end()){
+					break;
+				}
+				else if(nums.end() - it < min_interval) {
+					end = it = nums.end();
+				}
+				else {
+					end = it += min_interval;
+				}
+			}
+			auto outbegin = strings.begin() + (begin - nums.begin());
+			std::transform(begin, end, outbegin, static_cast<std::string(*)(unsigned long)>(std::to_string));
+		}
+	};
+	
+	for(unsigned i = 1; i < numCores; i++) {
+		threads.emplace_back(fill, i);
 	}
+
+	fill(0);
+
+	for(auto &t: threads) {
+		t.join();
+	}
+	std::cout <<  "starting..." << std::endl;
+	return strings;
+}
+
+void BucketSort::sort(unsigned int numCores) {
+	auto strings = getstrings(numbersToSort, numCores);
+	std::mutex m;
 
 	unsigned int running = numCores;
 
-	std::mutex m;
 	std::condition_variable cv;
 
 	std::queue<job> jobs;
@@ -125,13 +134,12 @@ void BucketSort::sort(unsigned int numCores) {
 			}
 		}
 
-
 		cv.notify_all();
 	};
 
-	std::vector<std::thread> threads;
 
 	std::cout <<  "starting..." << std::endl;
+	std::vector<std::thread> threads;
 	for(unsigned i = 1; i < numCores; i++) {
 		threads.emplace_back(calc, i);
 	}
