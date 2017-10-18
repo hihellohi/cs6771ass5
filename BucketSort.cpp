@@ -13,35 +13,7 @@
 #include <condition_variable>
 #include <thread>
 
-bool aLessB(const unsigned int& x, const unsigned int& y, unsigned int pow) {
-
-	if (x == y) return false; // if the two numbers are the same then one is not less than the other
-
-	unsigned int a = x;
-	unsigned int b = y;
-
-	// work out the digit we are currently comparing on. 
-	if (pow == 0) {
-		while (a / 10 > 0) {
-			a = a / 10; 
-		}   
-		while (b / 10 > 0) {
-			b = b / 10;
-		}
-	} else {
-		while (a / 10 >= (unsigned int) std::round(std::pow(10,pow))) {
-			a = a / 10;
-		}
-		while (b / 10 >= (unsigned int) std::round(std::pow(10,pow))) {
-			b = b / 10;
-		}
-	}
-
-	if (a == b)
-		return aLessB(x,y,pow + 1);  // recurse if this digit is the same 
-	else
-		return a < b;
-}
+static const unsigned min_interval = 10000;
 
 struct job {
 	job () = default;
@@ -55,9 +27,11 @@ struct job {
 void BucketSort::sort(unsigned int numCores) {
 	std::vector<std::string> strings;
 	strings.reserve(numbersToSort.size());
+	std::cout <<  "strinifying" << std::endl;
 	for(unsigned int num : numbersToSort) {
 		strings.push_back(std::to_string(num));
 	}
+	std::cout <<  "starting..." << std::endl;
 
 	unsigned int running = numCores;
 
@@ -91,7 +65,7 @@ void BucketSort::sort(unsigned int numCores) {
 				running++;
 			}
 
-			if(cur.end - cur.begin < 1000) {
+			if(cur.end - cur.begin < min_interval) {
 				std::sort(cur.begin, cur.end);
 				std::transform(cur.begin, cur.end, numbersToSort.begin() + (cur.begin - strings.begin()), [](auto s) {return std::stoul(s);});
 			}
@@ -131,7 +105,6 @@ void BucketSort::sort(unsigned int numCores) {
 
 	std::vector<std::thread> threads;
 
-	std::cout <<  "starting..." << std::endl;
 	for(unsigned i = 1; i < numCores; i++) {
 		threads.emplace_back(calc, i);
 	}
