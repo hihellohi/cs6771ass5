@@ -13,7 +13,7 @@
 #include <condition_variable>
 #include <thread>
 
-static const int min_interval = 10000;
+static const int min_interval = 1250000;
 
 struct job {
 	job () = default;
@@ -27,41 +27,36 @@ struct job {
 std::vector<std::string> getstrings(std::vector<unsigned int> nums, unsigned int numCores){
 	std::vector<std::string> strings(nums.size());
 	std::vector<std::thread> threads;
-	std::mutex m;
-	auto it = nums.begin();
 
-	auto fill = [&](unsigned i){
-		while(true) {
-			std::vector<unsigned int>::iterator begin;
-			std::vector<unsigned int>::iterator end;
-			{
-				std::lock_guard<std::mutex> lock(m);	
-				begin = it;
-				if(it == nums.end()){
-					break;
-				}
-				else if(nums.end() - it < min_interval) {
-					end = it = nums.end();
-				}
-				else {
-					end = it += min_interval;
-				}
-			}
-			auto outbegin = strings.begin() + (begin - nums.begin());
-			std::transform(begin, end, outbegin, static_cast<std::string(*)(unsigned long)>(std::to_string));
+	auto fill = [&](std::vector<unsigned int>::iterator begin, std::vector<unsigned int>::iterator end, unsigned int id){
+		std::cout <<  "starting... " << id << std::endl;
+		std::cout <<  "wrote... " << end - begin << std::endl;
+		auto outbegin = strings.begin() + (begin - nums.begin());
+		for(; begin != end; begin++){
+			*outbegin = std::to_string(*begin);
+			outbegin++;
 		}
+		std::cout <<  "done... " << id << std::endl;
 	};
 	
+	auto it = nums.begin();
+	unsigned int interval = (nums.size() + numCores - 1)/ numCores;
 	for(unsigned i = 1; i < numCores; i++) {
-		threads.emplace_back(fill, i);
+		auto begin = it;
+		if(nums.end() - it < interval) {
+			break;
+		}
+		else {
+			it += interval;
+		}
+		threads.emplace_back(fill, begin, it, i);
 	}
 
-	fill(0);
+	fill(it, nums.end(), 0);
 
 	for(auto &t: threads) {
 		t.join();
 	}
-	std::cout <<  "starting..." << std::endl;
 	return strings;
 }
 
