@@ -13,7 +13,7 @@
 #include <condition_variable>
 #include <thread>
 
-static const int min_interval = 1250000;
+static const unsigned int min_interval = 5000000;
 
 struct job {
 	job () = default;
@@ -40,7 +40,8 @@ std::vector<std::string> getstrings(std::vector<unsigned int> nums, unsigned int
 	};
 	
 	auto it = nums.begin();
-	unsigned int interval = (nums.size() + numCores - 1)/ numCores;
+	int interval = std::max(min_interval, (nums.size() + numCores - 1)/ numCores);
+	std::cout <<  "interval... " << interval << std::endl;
 	for(unsigned i = 1; i < numCores; i++) {
 		auto begin = it;
 		if(nums.end() - it < interval) {
