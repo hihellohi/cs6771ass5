@@ -13,7 +13,7 @@
 #include <condition_variable>
 #include <thread>
 
-static const unsigned min_interval = 10000;
+static const int min_interval = 10000;
 
 struct job {
 	job () = default;

@@ -9,7 +9,7 @@
 
 int main() {
 	
-	unsigned int totalNumbers =	50000000;
+	unsigned int totalNumbers =	5000000;
 	//unsigned int printIndex =	259;
 	
 	// use totalNumbers required as the seed for the random
