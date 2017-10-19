@@ -7,13 +7,11 @@
 #include <utility>
 #include <queue>
 #include <array>
-#include <cassert>
-#include <iostream>
 #include <mutex>
 #include <condition_variable>
 #include <thread>
 
-static const int min_interval = 10000;
+static const int min_interval = 9000;
 
 struct job {
 	job () = default;
@@ -27,11 +25,9 @@ struct job {
 void BucketSort::sort(unsigned int numCores) {
 	std::vector<std::string> strings;
 	strings.reserve(numbersToSort.size());
-	std::cout <<  "strinifying" << std::endl;
 	for(unsigned int num : numbersToSort) {
 		strings.push_back(std::to_string(num));
 	}
-	std::cout <<  "starting..." << std::endl;
 
 	unsigned int running = numCores;
 
