@@ -23,11 +23,9 @@ struct job {
 };
 
 void BucketSort::sort(unsigned int numCores) {
-	std::vector<std::string> strings;
-	strings.reserve(numbersToSort.size());
-	for(unsigned int num : numbersToSort) {
-		strings.push_back(std::to_string(num));
-	}
+	std::vector<std::string> strings(numbersToSort.size());
+	std::transform(numbersToSort.cbegin(), numbersToSort.cend(), strings.begin(), 
+			static_cast<std::string(*)(unsigned)>(std::to_string));
 
 	unsigned int running = numCores;
 
@@ -63,7 +61,8 @@ void BucketSort::sort(unsigned int numCores) {
 
 			if(cur.end - cur.begin < min_interval) {
 				std::sort(cur.begin, cur.end);
-				std::transform(cur.begin, cur.end, numbersToSort.begin() + (cur.begin - strings.begin()), [](auto s) {return std::stoul(s);});
+				std::transform(cur.begin, cur.end, numbersToSort.begin() + (cur.begin - strings.begin()),
+						[](auto s) { return std::stoul(s);});
 			}
 			else {
 				// rainbow sort
