@@ -19,7 +19,7 @@ int main() {
 
 	// create a sort object
 	BucketSort pbs;
-	//BucketSort2 pbs2;
+	BucketSort2 pbs2;
 
 	std::cout <<  "generating" << std::endl;
 
@@ -27,7 +27,7 @@ int main() {
 	for (unsigned int i=0; i < totalNumbers; ++i) {
 		auto j = dist(mt);
 		pbs.numbersToSort.push_back(j);
-		//pbs2.numbersToSort.push_back(j);
+		pbs2.numbersToSort.push_back(j);
 	} 
 	std::cout <<  "generating done" << std::endl;
 	
